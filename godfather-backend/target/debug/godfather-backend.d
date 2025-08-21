@@ -1,0 +1,1 @@
+/Users/pavlepantic/Desktop/godfather/godfather-backend/godfather-backend/target/debug/godfather-backend: /Users/pavlepantic/Desktop/godfather/godfather-backend/godfather-backend/migrations/20250821161253_create_users_table.sql /Users/pavlepantic/Desktop/godfather/godfather-backend/godfather-backend/src/main.rs
