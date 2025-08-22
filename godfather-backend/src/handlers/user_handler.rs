@@ -27,7 +27,8 @@ pub async fn login(
 
     // user fetch
     let user = sqlx::query_as::<_, User>(
-        "SELECT id, username, balance FROM users WHERE username = ?",
+        "SELECT id, username, email, role, banned, created_at, last_login, balance, minutes_balance 
+         FROM users WHERE username = ?",
     )
     .bind(&req.username)
     .fetch_one(&*state.pool)
@@ -56,10 +57,13 @@ pub async fn create_user(
 pub async fn list_users(
     State(state): State<AppState>,
 ) -> Result<Json<Vec<User>>, String> {
-    let users = sqlx::query_as::<_, User>("SELECT id, username, balance FROM users")
-        .fetch_all(&*state.pool)
-        .await
-        .map_err(|e| e.to_string())?;
+    let users = sqlx::query_as::<_, User>(
+        "SELECT id, username, email, role, banned, created_at, last_login, balance, minutes_balance 
+         FROM users"
+    )
+    .fetch_all(&*state.pool)
+    .await
+    .map_err(|e| e.to_string())?;
 
     Ok(Json(users))
 }
@@ -70,10 +74,9 @@ pub async fn update_balance(
     Json(payload): Json<UpdateBalance>,
 ) -> Result<Json<User>, String> {
     let user = sqlx::query_as::<_, User>(
-        "UPDATE users SET balance = ? WHERE id = ? 
-         RETURNING id, username, balance",
+        "UPDATE users SET balance = ?, minutes_balance = ? WHERE id = ? 
+         RETURNING id, username, email, role, banned, created_at, last_login, balance, minutes_balance",
     )
-    .bind(payload.balance)
     .bind(id)
     .fetch_one(&*state.pool)
     .await
