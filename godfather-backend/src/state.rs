@@ -8,6 +8,8 @@ pub struct AppState {
 
 impl AppState {
     pub fn new(pool: SqlitePool) -> Self {
-        Self { pool: Arc::new(pool) }
+        Self {
+            pool: Arc::new(pool),
+        }
     }
 }
