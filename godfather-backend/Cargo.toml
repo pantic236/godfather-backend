@@ -17,3 +17,4 @@ jsonwebtoken = "8.0"
 rand = "0.8"
 
 anyhow = "1.0.99"
+bcrypt = "0.17.1"
