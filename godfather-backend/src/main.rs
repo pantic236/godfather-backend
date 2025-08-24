@@ -41,6 +41,9 @@ async fn main() {
         .route("/users/:id/balance", get(handlers::balance_handler::get_balance))
         .route("/balance", get(handlers::balance_handler::get_my_balance))
         .route("/users/:id/add_minutes", post(handlers::balance_handler::add_minutes))
+        .route("/sessions/start", post(handlers::session_handler::start_session))
+        .route("/sessions/end", post(handlers::session_handler::end_session))
+        .route("/sessions/:id", get(handlers::session_handler::get_session))
         .with_state(app_state);
     
     let addr = SocketAddr::from(([127, 0, 0, 1], 3001));
