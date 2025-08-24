@@ -1,3 +1,15 @@
 .env
+.env.local
+.env.*.local
 
-/target/
+*.db
+*.sqlite
+
+target/
+
+.vscode/
+.idea/
+*.swp
+*.swo
+
+*.log

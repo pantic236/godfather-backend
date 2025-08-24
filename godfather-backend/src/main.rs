@@ -17,7 +17,7 @@ async fn main() {
     dotenvy::dotenv().ok();
     
     let jwt_secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "515785423c0c730a5c1a2f40a8a2fd44".to_string());
+        .expect("JWT_SECRET must be set in environment variables");
     
     let database_url = std::env::var("DATABASE_URL")
         .unwrap_or_else(|_| "sqlite:godfather.db".to_string());
@@ -37,9 +37,13 @@ async fn main() {
         .route("/health", get(handlers::user_handler::health))
         .route("/register", post(handlers::auth_handler::register))
         .route("/login", post(handlers::auth_handler::login))
+        .route("/users", get(handlers::user_handler::get_users))
+        .route("/users/:id/balance", get(handlers::balance_handler::get_balance))
+        .route("/balance", get(handlers::balance_handler::get_my_balance))
+        .route("/users/:id/add_minutes", post(handlers::balance_handler::add_minutes))
         .with_state(app_state);
     
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3002));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3001));
     println!("Server running on http://{}", addr);
     
     axum::serve(tokio::net::TcpListener::bind(addr).await.unwrap(), app)
