@@ -17,10 +17,10 @@ async fn main() {
     dotenvy::dotenv().ok();
     
     let jwt_secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "development-secret-key-change-me".to_string());
+        .unwrap_or_else(|_| "515785423c0c730a5c1a2f40a8a2fd44".to_string());
     
     let database_url = std::env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "sqlite:users.db".to_string());
+        .unwrap_or_else(|_| "sqlite:godfather.db".to_string());
     
     let pool = SqlitePool::connect(&database_url)
         .await
@@ -39,7 +39,7 @@ async fn main() {
         .route("/login", post(handlers::auth_handler::login))
         .with_state(app_state);
     
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3002));
     println!("Server running on http://{}", addr);
     
     axum::serve(tokio::net::TcpListener::bind(addr).await.unwrap(), app)
