@@ -86,7 +86,7 @@ pub async fn end_session(
     State(state): State<AppState>,
     Json(req): Json<EndSessionReq>,
 ) -> Result<Json<SessionResponse>, (StatusCode, String)> {
-    let session: Session = sqlx::query_as(
+    let session = sqlx::query_as::<_, Session>(
         "SELECT id, user_id, machine_id, started_at, ended_at, minutes_consumed FROM sessions WHERE id = ?",
     )
     .bind(req.session_id)
@@ -99,9 +99,16 @@ pub async fn end_session(
     }
 
     // calculate elapsed time
-    let minutes_consumed = calculate_minutes_elapsed(&session.started_at)?;
+    let started_at_naive = chrono::NaiveDateTime::parse_from_str(&session.started_at, "%Y-%m-%d %H:%M:%S")
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Invalid timestamp format".to_string()))?;
 
-    // decrease balance
+    let started_at: DateTime<Utc> = DateTime::from_naive_utc_and_offset(started_at_naive, Utc);
+    let now: DateTime<Utc> = Utc::now();
+
+    let duration = now.signed_duration_since(started_at);
+    let minutes_consumed = (duration.num_seconds() / 60).max(1) as i64; 
+
+    // deduct from user balance
     let user_minutes: i64 = sqlx::query_scalar!(
         "SELECT minutes_balance FROM users WHERE id = ?",
         session.user_id
@@ -114,8 +121,18 @@ pub async fn end_session(
         return Err((StatusCode::FORBIDDEN, "Insufficient balance to cover session time".to_string()));
     }
 
-    // update session info
-    let updated_session: Session = sqlx::query_as(
+    let hours_consumed = ((minutes_consumed as f64) / 60.0).ceil() as i64;
+
+    // update user's lifetime hours
+    let _ = sqlx::query(
+        "UPDATE users SET lifetime_hours = lifetime_hours + ? WHERE id = ?"
+    )
+    .bind(hours_consumed)
+    .bind(session.user_id)
+    .execute(&state.pool)
+    .await;
+
+    let updated_session = sqlx::query_as::<_, Session>(
         "UPDATE sessions SET ended_at = datetime('now'), minutes_consumed = ? WHERE id = ? 
          RETURNING id, user_id, machine_id, started_at, ended_at, minutes_consumed",
     )
@@ -125,7 +142,6 @@ pub async fn end_session(
     .await
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to end session: {}", e)))?;
 
-    // update balance
     let _ = sqlx::query(
         "UPDATE users SET minutes_balance = minutes_balance - ? WHERE id = ?",
     )
@@ -134,7 +150,6 @@ pub async fn end_session(
     .execute(&state.pool)
     .await;
 
-    // free machine
     let _ = sqlx::query("UPDATE machines SET status = 'available' WHERE id = ?")
         .bind(session.machine_id)
         .execute(&state.pool)
@@ -142,7 +157,8 @@ pub async fn end_session(
 
     let response = SessionResponse {
         session: updated_session,
-        message: format!("Session ended successfully. {} minutes consumed", minutes_consumed),
+        message: format!("Session ended successfully. {} minutes consumed. {} hours added to lifetime total.", 
+                        minutes_consumed, hours_consumed),
     };
 
     Ok(Json(response))

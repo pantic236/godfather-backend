@@ -12,6 +12,8 @@ pub struct User {
     pub last_login: Option<String>,
     pub balance: i64,
     pub minutes_balance: i64,
+    pub bonus_minutes: i64,
+    pub lifetime_hours: i64,
     pub password_hash: Option<String>,
 }
 

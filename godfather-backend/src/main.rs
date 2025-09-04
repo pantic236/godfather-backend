@@ -39,14 +39,17 @@ async fn main() {
         .route("/login", post(handlers::auth_handler::login))
         .route("/users", get(handlers::user_handler::get_users))
         .route("/users/:id/balance", get(handlers::balance_handler::get_balance))
-        .route("/balance", get(handlers::balance_handler::get_my_balance))
-        .route("/users/:id/add_minutes", post(handlers::balance_handler::add_minutes))
+        .route("/users/:id/add_bonus", post(handlers::balance_handler::add_bonus))
         .route("/sessions/start", post(handlers::session_handler::start_session))
         .route("/sessions/end", post(handlers::session_handler::end_session))
         .route("/sessions/:id", get(handlers::session_handler::get_session))
         .route("/machines/register", post(handlers::machine_handler::register_machine))
         .route("/machines/heartbeat", post(handlers::machine_handler::heartbeat))
         .route("/machines", get(handlers::machine_handler::get_machines))
+        .route("/users/:id/ban", post(handlers::admin_handler::ban_user))
+        .route("/users/:id/unban", post(handlers::admin_handler::unban_user))
+        .route("/admin/users", get(handlers::admin_handler::get_all_users))
+        .route("/admin/sessions", get(handlers::admin_handler::get_active_sessions))
         .with_state(app_state);
     
     let addr = SocketAddr::from(([127, 0, 0, 1], 3001));

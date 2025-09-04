@@ -1,6 +1,6 @@
 use axum::{
     Json, 
-    extract::{Request, Extension},
+    extract::{Request},
     http::StatusCode,
 };
 use crate::{models::user::User, auth::jwt::JwtClaims};
